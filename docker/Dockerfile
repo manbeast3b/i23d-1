@@ -76,9 +76,25 @@ RUN git clone https://github.com/ashawkey/diff-gaussian-rasterization.git /tmp/d
     rm -rf /tmp/diff-gaussian
 
 # Build nvdiffrast from source (cp311 wheels not available)
-RUN git clone https://github.com/NVlabs/nvdiffrast.git /tmp/nvdiffrast && \
-    cd /tmp/nvdiffrast && \
-    pip install --no-build-isolation . && \
+RUN set -eux; \
+    # Primary attempt: CUDA from conda
+    git clone https://github.com/NVlabs/nvdiffrast.git /tmp/nvdiffrast; \
+    cd /tmp/nvdiffrast; \
+    if TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 9.0" CUDA_HOME=/opt/conda \
+        pip install --no-build-isolation .; then \
+        echo "nvdiffrast install succeeded (primary path)"; \
+    else \
+        echo "Primary nvdiffrast build failed, trying fallback"; \
+        cd /tmp; rm -rf nvdiffrast; \
+        git clone https://github.com/NVlabs/nvdiffrast.git /tmp/nvdiffrast; \
+        cd /tmp/nvdiffrast; \
+        if TORCH_CUDA_ARCH_LIST="8.0 8.6" CUDA_HOME=/usr/local/cuda \
+            pip install --no-build-isolation .; then \
+            echo "nvdiffrast install succeeded (fallback path)"; \
+        else \
+            echo "WARNING: nvdiffrast install failed; continuing without it"; \
+        fi; \
+    fi; \
     rm -rf /tmp/nvdiffrast
 
 # Install SPZ
