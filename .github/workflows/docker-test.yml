@@ -19,7 +19,7 @@ jobs:
       - name: Build image (no push)
         uses: docker/build-push-action@v5
         with:
-          context: ./docker        # path where your Dockerfile is
+          context: .        # path where your Dockerfile is
           file: ./docker/Dockerfile
           push: false
           tags: i23d-1:test
