@@ -68,33 +68,39 @@ RUN conda install -c nvidia cuda-toolkit=12.8 -y
 
 # Build diff_gaussian_rasterization from source (cp311 wheels not available)
 # Set CUDA_HOME to conda prefix for building
-ENV CUDA_HOME=/opt/conda
+# ENV CUDA_HOME=/opt/conda
 RUN git clone https://github.com/ashawkey/diff-gaussian-rasterization.git /tmp/diff-gaussian && \
     cd /tmp/diff-gaussian && \
     git submodule update --init --recursive && \
     pip install --no-build-isolation . && \
     rm -rf /tmp/diff-gaussian
 
-# Build nvdiffrast from source (cp311 wheels not available)
-RUN set -eux; \
-    # Primary attempt: CUDA from conda
+# # Build nvdiffrast from source (cp311 wheels not available)
+# RUN set -eux; \
+#     # Primary attempt: CUDA from conda
+#     git clone https://github.com/NVlabs/nvdiffrast.git /tmp/nvdiffrast; \
+#     cd /tmp/nvdiffrast; \
+#     if TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 9.0" CUDA_HOME=/opt/conda \
+#         pip install --no-build-isolation .; then \
+#         echo "nvdiffrast install succeeded (primary path)"; \
+#     else \
+#         echo "Primary nvdiffrast build failed, trying fallback"; \
+#         cd /tmp; rm -rf nvdiffrast; \
+#         git clone https://github.com/NVlabs/nvdiffrast.git /tmp/nvdiffrast; \
+#         cd /tmp/nvdiffrast; \
+#         if TORCH_CUDA_ARCH_LIST="8.0 8.6" CUDA_HOME=/usr/local/cuda \
+#             pip install --no-build-isolation .; then \
+#             echo "nvdiffrast install succeeded (fallback path)"; \
+#         else \
+#             echo "WARNING: nvdiffrast install failed; continuing without it"; \
+#         fi; \
+#     fi; \
+#     rm -rf /tmp/nvdiffrast
+
+RUN rm -rf nvdiffrast; \
     git clone https://github.com/NVlabs/nvdiffrast.git /tmp/nvdiffrast; \
     cd /tmp/nvdiffrast; \
-    if TORCH_CUDA_ARCH_LIST="8.0 8.6 8.9 9.0" CUDA_HOME=/opt/conda \
-        pip install --no-build-isolation .; then \
-        echo "nvdiffrast install succeeded (primary path)"; \
-    else \
-        echo "Primary nvdiffrast build failed, trying fallback"; \
-        cd /tmp; rm -rf nvdiffrast; \
-        git clone https://github.com/NVlabs/nvdiffrast.git /tmp/nvdiffrast; \
-        cd /tmp/nvdiffrast; \
-        if TORCH_CUDA_ARCH_LIST="8.0 8.6" CUDA_HOME=/usr/local/cuda \
-            pip install --no-build-isolation .; then \
-            echo "nvdiffrast install succeeded (fallback path)"; \
-        else \
-            echo "WARNING: nvdiffrast install failed; continuing without it"; \
-        fi; \
-    fi; \
+    pip install --no-build-isolation . && \
     rm -rf /tmp/nvdiffrast
 
 # Install SPZ
