@@ -119,7 +119,7 @@ WORKDIR /workspace
 COPY pipeline_service /workspace
 
 # Create symbolic link for trellis self-import compatibility
-RUN cd /workspace/libs && ln -sf . trellis/trellis
+RUN cd /workspace/pipeline_service/libs && ln -sf . trellis/trellis
 
 EXPOSE 10006
 CMD ["python",  "serve.py"]
