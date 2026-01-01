@@ -97,14 +97,16 @@ RUN git clone https://github.com/ashawkey/diff-gaussian-rasterization.git /tmp/d
 #     fi; \
 #     rm -rf /tmp/nvdiffrast
 
-RUN rm -rf nvdiffrast; \
+RUN cd /workspace; \
+    rm -rf nvdiffrast; \
     git clone https://github.com/NVlabs/nvdiffrast.git /tmp/nvdiffrast; \
     cd /tmp/nvdiffrast; \
     pip install --no-build-isolation . && \
     rm -rf /tmp/nvdiffrast
 
 # Install SPZ
-RUN wget https://github.com/404-Repo/spz/releases/download/v.0.1.2/pyspz-wheels-ubuntu-latest.zip && \
+RUN cd /workspace; \
+    wget https://github.com/404-Repo/spz/releases/download/v.0.1.2/pyspz-wheels-ubuntu-latest.zip && \
     unzip pyspz-wheels-ubuntu-latest.zip && \
     pip install pyspz-1.0.0-cp311-cp311-manylinux_2_34_x86_64.whl && \
     rm -rf pyspz-wheels-ubuntu-latest.zip *.whl
