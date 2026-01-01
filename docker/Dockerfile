@@ -118,8 +118,20 @@ WORKDIR /workspace
 # Copy the project (includes ReconViaGen components in libs/)
 COPY pipeline_service /workspace
 
-# Create symbolic link for trellis self-import compatibility
-RUN cd /workspace/pipeline_service/libs && ln -sf . trellis/trellis
+# # Create symbolic link for trellis self-import compatibility
+# RUN cd /workspace/pipeline_service/libs && ln -sf . trellis/trellis
+# Best-effort symlink creation with fallbacks
+RUN set -eux; \
+    # Try from /workspace/pipeline_service/libs
+    if cd /workspace/pipeline_service/libs 2>/dev/null; then \
+        mkdir -p trellis && ln -sf . trellis/trellis && echo "Linked from /workspace/pipeline_service/libs"; \
+    elif cd /workspace/pipeline_service 2>/dev/null; then \
+        mkdir -p libs/trellis && ln -sf . libs/trellis/trellis && echo "Linked from /workspace/pipeline_service"; \
+    elif cd /workspace 2>/dev/null; then \
+        mkdir -p pipeline_service/libs/trellis && ln -sf . pipeline_service/libs/trellis/trellis && echo "Linked from /workspace"; \
+    else \
+        echo "WARNING: could not create trellis symlink; directories missing"; \
+    fi || echo "WARNING: trellis symlink step failed but build will continue"
 
 EXPOSE 10006
 CMD ["python",  "serve.py"]
