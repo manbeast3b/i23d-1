@@ -121,17 +121,39 @@ COPY pipeline_service /workspace
 # # Create symbolic link for trellis self-import compatibility
 # RUN cd /workspace/pipeline_service/libs && ln -sf . trellis/trellis
 # Best-effort symlink creation with fallbacks
+# RUN set -eux; \
+#     # Try from /workspace/pipeline_service/libs
+#     if cd /workspace/pipeline_service/libs 2>/dev/null; then \
+#         mkdir -p trellis && ln -sf . trellis/trellis && echo "Linked from /workspace/pipeline_service/libs"; \
+#     elif cd /workspace/pipeline_service 2>/dev/null; then \
+#         mkdir -p libs/trellis && ln -sf . libs/trellis/trellis && echo "Linked from /workspace/pipeline_service"; \
+#     elif cd /workspace 2>/dev/null; then \
+#         mkdir -p pipeline_service/libs/trellis && ln -sf . pipeline_service/libs/trellis/trellis && echo "Linked from /workspace"; \
+#     else \
+#         echo "WARNING: could not create trellis symlink; directories missing"; \
+#     fi || echo "WARNING: trellis symlink step failed but build will continue"
+
 RUN set -eux; \
-    # Try from /workspace/pipeline_service/libs
-    if cd /workspace/pipeline_service/libs 2>/dev/null; then \
-        mkdir -p trellis && ln -sf . trellis/trellis && echo "Linked from /workspace/pipeline_service/libs"; \
-    elif cd /workspace/pipeline_service 2>/dev/null; then \
-        mkdir -p libs/trellis && ln -sf . libs/trellis/trellis && echo "Linked from /workspace/pipeline_service"; \
-    elif cd /workspace 2>/dev/null; then \
-        mkdir -p pipeline_service/libs/trellis && ln -sf . pipeline_service/libs/trellis/trellis && echo "Linked from /workspace"; \
-    else \
-        echo "WARNING: could not create trellis symlink; directories missing"; \
-    fi || echo "WARNING: trellis symlink step failed but build will continue"
+    linked=0; \
+    if [ -d /workspace/pipeline_service/libs/trellis ]; then \
+        cd /workspace/pipeline_service/libs; \
+        ln -sf . trellis/trellis || echo "WARNING: ln failed in /workspace/pipeline_service/libs"; \
+        linked=1; \
+    fi; \
+    if [ "$linked" -eq 0 ] && [ -d /workspace/libs/trellis ]; then \
+        cd /workspace/libs; \
+        ln -sf . trellis/trellis || echo "WARNING: ln failed in /workspace/libs"; \
+        linked=1; \
+    fi; \
+    if [ "$linked" -eq 0 ] && [ -d libs/trellis ]; then \
+        cd libs; \
+        ln -sf . trellis/trellis || echo "WARNING: ln failed in ./libs"; \
+        linked=1; \
+    fi; \
+    if [ "$linked" -eq 0 ]; then \
+        echo "WARNING: trellis libs not found in expected locations, skipping symlink"; \
+    fi
+
 
 EXPOSE 10006
 CMD ["python",  "serve.py"]
